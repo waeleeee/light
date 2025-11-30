@@ -37,7 +37,7 @@ export const LogConsole = ({ logs }: LogConsoleProps) => {
     <div className="bg-gray-900 rounded-lg p-4 shadow-lg h-64 overflow-hidden flex flex-col">
       <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-700">
         <Terminal size={18} className="text-green-400" />
-        <h3 className="text-sm font-bold text-gray-300">Execution Log</h3>
+        <h3 className="text-sm font-bold text-gray-300">Journal d'Exécution 📋</h3>
       </div>
       <div className="flex-1 overflow-y-auto font-mono text-xs space-y-1">
         <AnimatePresence initial={false}>

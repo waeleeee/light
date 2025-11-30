@@ -17,7 +17,7 @@ export const StateTimeline = ({ states }: StateTimelineProps) => {
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-lg">
-      <h3 className="text-lg font-bold text-gray-800 mb-4">State Timeline</h3>
+      <h3 className="text-lg font-bold text-gray-800 mb-4">⏱️ Chronologie d'État</h3>
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
         {states.map((state, index) => (
           <div key={index} className="flex items-center">
@@ -34,7 +34,7 @@ export const StateTimeline = ({ states }: StateTimelineProps) => {
                   {state[0]}
                 </span>
               </div>
-              <span className="text-xs text-gray-600 font-mono">{index}</span>
+              <span className="text-xs text-gray-600 font-mono">#{index}</span>
             </motion.div>
             {index < states.length - 1 && (
               <motion.div
