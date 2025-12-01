@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useEffect, useRef } from 'react';
 import { LightState } from '../models/murphiModel';
 
 interface StateTimelineProps {
@@ -6,6 +7,19 @@ interface StateTimelineProps {
 }
 
 export const StateTimeline = ({ states }: StateTimelineProps) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to the latest state when states change
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      // Scroll to the right to show the latest state
+      const scrollElement = scrollContainerRef.current;
+      setTimeout(() => {
+        scrollElement.scrollLeft = scrollElement.scrollWidth;
+      }, 100);
+    }
+  }, [states]);
+
   const getStateColor = (state: LightState) => {
     const colors = {
       RED: 'bg-red-500 border-red-600',
@@ -18,9 +32,9 @@ export const StateTimeline = ({ states }: StateTimelineProps) => {
   return (
     <div className="bg-white rounded-lg p-6 shadow-lg">
       <h3 className="text-lg font-bold text-gray-800 mb-4">⏱️ Chronologie d'État</h3>
-      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+      <div ref={scrollContainerRef} className="flex items-center gap-2 overflow-x-auto pb-2 scroll-smooth">
         {states.map((state, index) => (
-          <div key={index} className="flex items-center">
+          <div key={index} className="flex items-center flex-shrink-0">
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -41,7 +55,7 @@ export const StateTimeline = ({ states }: StateTimelineProps) => {
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: index * 0.1 + 0.05 }}
-                className="w-8 h-0.5 bg-gray-400 mx-1"
+                className="w-8 h-0.5 bg-gray-400 mx-1 flex-shrink-0"
                 style={{ originX: 0 }}
               />
             )}

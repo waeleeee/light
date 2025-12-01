@@ -72,7 +72,8 @@ function App() {
   };
 
   const executeNextStep = () => {
-    const { nextState, appliedRule } = murphiModel.applyRule(currentState, currentScenario.rules);
+    const prev = stateHistory.length >= 2 ? stateHistory[stateHistory.length - 2] : undefined;
+    const { nextState, appliedRule } = murphiModel.applyRule(currentState, currentScenario.rules, prev);
 
     if (appliedRule) {
       setCurrentState(nextState);
@@ -153,7 +154,8 @@ function App() {
       intervalRef.current = window.setInterval(() => {
         if (isMounted) {
           // Execute step inline to avoid dependency issues
-          const { nextState, appliedRule } = murphiModel.applyRule(currentState, currentScenario.rules);
+          const prev = stateHistory.length >= 2 ? stateHistory[stateHistory.length - 2] : undefined;
+          const { nextState, appliedRule } = murphiModel.applyRule(currentState, currentScenario.rules, prev);
 
           if (appliedRule) {
             setCurrentState(nextState);

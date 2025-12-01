@@ -4,7 +4,7 @@ export type DemoMode = "normal" | "violation" | "deadlock";
 export interface MurphiRule {
   id: string;
   name: string;
-  guard: (state: LightState) => boolean;
+  guard: (state: LightState, prevState?: LightState, step?: number) => boolean;
   action: (state: LightState) => LightState;
   description: string;
 }
@@ -33,28 +33,27 @@ export interface DemoScenario {
 
 export const murphiModel = {
   states: ["RED", "YELLOW", "GREEN"] as LightState[],
-
   rules: [
     {
       id: "rule1",
       name: "RED_TO_GREEN",
-      guard: (state: LightState) => state === "RED",
+      guard: (state: LightState, prevState?: LightState) => state === "RED",
       action: () => "GREEN" as LightState,
-      description: "ruleset RED_TO_GREEN\n  state = RED =>\n    state := GREEN;\nend;",
+      description: "ruleset RED_TO_GREEN\n  état = RED =>\n    état := GREEN;\nend;",
     },
     {
       id: "rule2",
       name: "GREEN_TO_YELLOW",
-      guard: (state: LightState) => state === "GREEN",
+      guard: (state: LightState, prevState?: LightState) => state === "GREEN",
       action: () => "YELLOW" as LightState,
-      description: "ruleset GREEN_TO_YELLOW\n  state = GREEN =>\n    state := YELLOW;\nend;",
+      description: "ruleset GREEN_TO_YELLOW\n  état = GREEN =>\n    état := YELLOW;\nend;",
     },
     {
       id: "rule3",
       name: "YELLOW_TO_RED",
-      guard: (state: LightState) => state === "YELLOW",
+      guard: (state: LightState, prevState?: LightState) => state === "YELLOW",
       action: () => "RED" as LightState,
-      description: "ruleset YELLOW_TO_RED\n  state = YELLOW =>\n    state := RED;\nend;",
+      description: "ruleset YELLOW_TO_RED\n  état = YELLOW =>\n    état := RED;\nend;",
     },
   ] as MurphiRule[],
 
@@ -65,36 +64,43 @@ export const murphiModel = {
       check: (state: LightState, activeCount: number) => {
         return activeCount === 1;
       },
-      description: "invariant \"Only one light can be active\"\n  activeCount = 1;",
+      description: "invariant \"Un seul feu peut être actif\"\n  activeCount = 1;",
     },
   ] as MurphiInvariant[],
 
-  // Demo Scenarios
+  // Scénarios de démonstration
   demoScenarios: {
     normal: {
-      name: "Normal Operation",
-      description: "Standard traffic light cycle following proper rules",
+      name: "Fonctionnement Normal",
+      description: "Cycle standard du feu tricolore",
       rules: [
         {
-          id: "rule1",
-          name: "RED_TO_GREEN",
-          guard: (state: LightState) => state === "RED",
-          action: () => "GREEN" as LightState,
-          description: "ruleset RED_TO_GREEN\n  state = RED =>\n    state := GREEN;\nend;",
-        },
-        {
-          id: "rule2",
-          name: "GREEN_TO_YELLOW",
-          guard: (state: LightState) => state === "GREEN",
+          id: "RED_TO_YELLOW",
+          name: "RED_TO_YELLOW",
+          guard: (state: LightState, prevState?: LightState) => state === "RED",
           action: () => "YELLOW" as LightState,
-          description: "ruleset GREEN_TO_YELLOW\n  state = GREEN =>\n    state := YELLOW;\nend;",
+          description: "ruleset RED_TO_YELLOW\n  état = RED =>\n    état := YELLOW;\nend;",
         },
         {
-          id: "rule3",
+          id: "YELLOW_TO_GREEN",
+          name: "YELLOW_TO_GREEN",
+          guard: (state: LightState, prevState?: LightState) => state === "YELLOW" && prevState === "RED",
+          action: () => "GREEN" as LightState,
+          description: "ruleset YELLOW_TO_GREEN\n  état = YELLOW et précédent = RED =>\n    état := GREEN;\nend;",
+        },
+        {
+          id: "GREEN_TO_YELLOW",
+          name: "GREEN_TO_YELLOW",
+          guard: (state: LightState, prevState?: LightState) => state === "GREEN",
+          action: () => "YELLOW" as LightState,
+          description: "ruleset GREEN_TO_YELLOW\n  état = GREEN =>\n    état := YELLOW;\nend;",
+        },
+        {
+          id: "YELLOW_TO_RED",
           name: "YELLOW_TO_RED",
-          guard: (state: LightState) => state === "YELLOW",
+          guard: (state: LightState, prevState?: LightState) => state === "YELLOW" && prevState === "GREEN",
           action: () => "RED" as LightState,
-          description: "ruleset YELLOW_TO_RED\n  state = YELLOW =>\n    state := RED;\nend;",
+          description: "ruleset YELLOW_TO_RED\n  état = YELLOW et précédent = GREEN =>\n    état := RED;\nend;",
         },
       ],
       invariants: [
@@ -102,34 +108,34 @@ export const murphiModel = {
           id: "inv1",
           name: "SINGLE_LIGHT_ACTIVE",
           check: (state: LightState, activeCount: number) => activeCount === 1,
-          description: "invariant \"Only one light can be active\"\n  activeCount = 1;",
+          description: "invariant \"Un seul feu peut être actif\"\n  activeCount = 1;",
         },
       ],
     },
     violation: {
-      name: "Violation Scenario",
-      description: "Shows what happens when invariants are violated",
+      name: "Scénario de violation",
+      description: "Montre ce qui se passe lorsque les invariants sont violés",
       rules: [
         {
           id: "rule1",
           name: "RED_TO_YELLOW",
-          guard: (state: LightState) => state === "RED",
+          guard: (state: LightState, prevState?: LightState) => state === "RED",
           action: () => "YELLOW" as LightState,
-          description: "ruleset RED_TO_YELLOW (INVALID)\n  state = RED =>\n    state := YELLOW;  -- Skips GREEN!\nend;",
+          description: "ruleset RED_TO_YELLOW (INVALID)\n  état = RED =>\n    état := YELLOW;  -- Passe à GREEN !\nend;",
         },
         {
           id: "rule2",
           name: "YELLOW_TO_GREEN",
-          guard: (state: LightState) => state === "YELLOW",
+          guard: (state: LightState, prevState?: LightState) => state === "YELLOW",
           action: () => "GREEN" as LightState,
-          description: "ruleset YELLOW_TO_GREEN (INVALID)\n  state = YELLOW =>\n    state := GREEN;  -- Wrong order!\nend;",
+          description: "ruleset YELLOW_TO_GREEN (INVALID)\n  état = YELLOW =>\n    état := GREEN;  -- Ordre incorrect !\nend;",
         },
         {
           id: "rule3",
           name: "GREEN_TO_RED",
-          guard: (state: LightState) => state === "GREEN",
+          guard: (state: LightState, prevState?: LightState) => state === "GREEN",
           action: () => "RED" as LightState,
-          description: "ruleset GREEN_TO_RED (INVALID)\n  state = GREEN =>\n    state := RED;  -- Skips YELLOW!\nend;",
+          description: "ruleset GREEN_TO_RED (INVALID)\n  état = GREEN =>\n    état := RED;  -- Passe YELLOW !\nend;",
         },
       ],
       invariants: [
@@ -137,30 +143,30 @@ export const murphiModel = {
           id: "inv1",
           name: "PROPER_SEQUENCE",
           check: (state: LightState) => {
-            // This will fail with the violation rules
-            return false; // Force violation to show
+            // Ceci échouera avec les règles de violation
+            return false; // Forcer une violation pour la démonstration
           },
-          description: "invariant \"Proper traffic light sequence must be maintained\"\n  Sequence: RED -> GREEN -> YELLOW -> RED;",
+          description: "invariant \"La séquence du feu tricolore doit être respectée\"\n  Séquence : RED -> GREEN -> YELLOW -> RED;",
         },
       ],
     },
     deadlock: {
-      name: "Deadlock Scenario",
-      description: "Shows a system that gets stuck and cannot proceed",
+      name: "Scénario d'interblocage",
+      description: "Montre un système qui se bloque et ne peut plus progresser",
       rules: [
         {
           id: "rule1",
           name: "RED_TO_GREEN",
-          guard: (state: LightState) => state === "RED",
+          guard: (state: LightState, prevState?: LightState) => state === "RED",
           action: () => "GREEN" as LightState,
-          description: "ruleset RED_TO_GREEN\n  state = RED =>\n    state := GREEN;\nend;",
+          description: "ruleset RED_TO_GREEN\n  état = RED =>\n    état := GREEN;\nend;",
         },
         {
           id: "rule_stuck",
           name: "STUCK_IN_GREEN",
-          guard: (state: LightState) => state === "GREEN",
+          guard: (state: LightState, prevState?: LightState) => state === "GREEN",
           action: () => "GREEN" as LightState,
-          description: "ruleset STUCK_IN_GREEN (DEADLOCK)\n  state = GREEN =>\n    state := GREEN;  -- System stuck!\nend;",
+          description: "ruleset STUCK_IN_GREEN (DEADLOCK)\n  état = GREEN =>\n    état := GREEN;  -- Système bloqué !\nend;",
         },
       ],
       invariants: [
@@ -168,18 +174,18 @@ export const murphiModel = {
           id: "inv1",
           name: "NO_DEADLOCK",
           check: (state: LightState, activeCount: number, stepCount?: number) => {
-            // After 2 steps, if still in GREEN, deadlock detected
+            // Après 2 étapes, si toujours en GREEN, interblocage détecté
             return !(stepCount && stepCount > 1 && state === "GREEN");
           },
-          description: "invariant \"System must not reach deadlock\"\n  System must always be able to transition;",
+          description: "invariant \"Le système ne doit pas atteindre l'interblocage\"\n  Le système doit toujours pouvoir effectuer une transition;",
         },
       ],
     },
   } as Record<DemoMode, DemoScenario>,
 
-  applyRule: (currentState: LightState, rules?: MurphiRule[]): { nextState: LightState; appliedRule: MurphiRule | null } => {
+  applyRule: (currentState: LightState, rules?: MurphiRule[], prevState?: LightState, step?: number): { nextState: LightState; appliedRule: MurphiRule | null } => {
     const rulesToUse = rules || murphiModel.rules;
-    const applicableRule = rulesToUse.find((rule) => rule.guard(currentState));
+    const applicableRule = rulesToUse.find((rule) => rule.guard(currentState, prevState, step));
 
     if (applicableRule) {
       const nextState = applicableRule.action(currentState);
@@ -223,8 +229,10 @@ export const murphiModel = {
 
     visitedStates.push(currentState);
 
+    let prevState: LightState | undefined = undefined;
+
     for (let step = 0; step < maxSteps; step++) {
-      const { nextState, appliedRule } = murphiModel.applyRule(currentState, rulesToUse);
+      const { nextState, appliedRule } = murphiModel.applyRule(currentState, rulesToUse, prevState, step + 1);
 
       if (!appliedRule) break;
 
@@ -243,6 +251,7 @@ export const murphiModel = {
       }
 
       visitedStates.push(nextState);
+      prevState = currentState;
       currentState = nextState;
     }
 
